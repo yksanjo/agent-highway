@@ -125,9 +125,10 @@ class HighwayClient:
 class SyncHighwayClient:
     """Synchronous wrapper for HighwayClient."""
     
-    def __init__(self, url: str = "ws://localhost:9000"):
-        self.url = url
-        self._async_client = HighwayClient(url)
+    def __init__(self, url: str = None):
+        from .discovery import find_highway
+        self.url = url or find_highway() or "ws://localhost:9000"
+        self._async_client = HighwayClient(self.url)
         self._loop = asyncio.new_event_loop()
         asyncio.set_event_loop(self._loop)
     

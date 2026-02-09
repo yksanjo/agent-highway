@@ -23,6 +23,7 @@ from .client import HighwayClient, SyncHighwayClient
 from .agent import HighwayAgent
 from .signals import Signal, Lane
 from .embedding import embed, cosine_similarity
+from .discovery import HighwayDiscovery, find_highway, list_highways
 
 __version__ = "1.0.0"
 __all__ = [
