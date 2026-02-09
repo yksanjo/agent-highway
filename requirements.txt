@@ -1,0 +1,27 @@
+# Agent Highway - Dependencies
+
+# Core
+aiohttp>=3.8.0
+pyyaml>=6.0.0
+python-dotenv>=1.0.0
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualization
+rich>=13.0.0
+
+# API
+fastapi>=0.103.0
+uvicorn>=0.23.0
+websockets>=11.0.0
+
+# Optional Database
+# sqlite3 (built-in)
+# psycopg2-binary>=2.9.0  # PostgreSQL
+# redis>=5.0.0  # Redis cache
+
+# Development
+pytest>=7.4.0
+black>=23.0.0
