@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "vortex.js",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/v1/(.*)",
+      "dest": "/vortex.js"
+    },
+    {
+      "src": "/",
+      "dest": "/web/index.html"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+}

@@ -13,7 +13,6 @@ from typing import List, Optional, Set
 from enum import Enum
 
 import aiohttp
-from aiohttp import ClientRateLimitError
 
 
 class AgentType(Enum):

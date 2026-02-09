@@ -1,0 +1,32 @@
+# Agent Highway Configuration
+highway:
+  name: "Agent Highway"
+  version: "1.0.0"
+  data_dir: "./data"
+
+collectors:
+  github:
+    enabled: true
+    rate_limit: 5000
+    
+  openclaw:
+    enabled: true
+    scan_github: true
+    
+  discord:
+    enabled: false
+    
+  telegram:
+    enabled: false
+
+processing:
+  batch_size: 100
+  flush_interval: 5
+
+detection:
+  confidence_threshold: 0.6
+  min_signals: 3
+
+dashboard:
+  enabled: true
+  port: 8080

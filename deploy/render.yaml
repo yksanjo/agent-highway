@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: agenthighway
+    runtime: node
+    plan: standard
+    buildCommand: npm ci
+    startCommand: node vortex.js --web
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HIGHWAY_PORT
+        value: 9000
+      - key: HTTP_PORT
+        value: 10000  # Render uses PORT env var
+      - key: PUBLIC_URL
+        fromService:
+          name: agenthighway
+          type: web
+          property: host
+    healthCheckPath: /api/v1/status

@@ -35,3 +35,18 @@ htmlcov/
 tmp/
 temp/
 *.tmp
+
+# Data and secrets (DO NOT COMMIT)
+data/
+config/.env
+*.key
+*.pem
+.secrets
+
+# Local configuration
+config/local*.yaml
+config/private*
+
+# Test outputs
+test_output/
+coverage.xml
