@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  highway-core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: highway-core
+    ports:
+      - "9000:9000"  # WebSocket
+      - "9001:9001"  # HTTP API
+    environment:
+      - NODE_ENV=production
+      - HIGHWAY_PORT=9000
+      - HTTP_PORT=9001
+      - TICK_RATE=100
+    networks:
+      - highway-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9001/api/v1/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: Redis for distributed mode
+  redis:
+    image: redis:7-alpine
+    container_name: highway-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - highway-net
+    restart: unless-stopped
+    profiles:
+      - distributed
+
+  # Example: Python agent
+  python-agent:
+    build:
+      context: ./sdks/python
+      dockerfile: Dockerfile
+    container_name: highway-python-agent
+    environment:
+      - HIGHWAY_URL=ws://highway-core:9000
+      - AGENT_NAME=DockerPythonAgent
+    networks:
+      - highway-net
+    depends_on:
+      - highway-core
+    profiles:
+      - examples
+
+  # Monitoring (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: highway-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    networks:
+      - highway-net
+    profiles:
+      - monitoring
+
+networks:
+  highway-net:
+    driver: bridge

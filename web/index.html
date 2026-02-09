@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AgentHighway // VORTEX_MONITOR</title>
+    <style>
+        /* === RETRO CRT AESTHETICS === */
+        :root {
+            --phosphor: #33ff00;
+            --phosphor-dim: #1a8000;
+            --phosphor-bright: #66ff33;
+            --amber: #ffb000;
+            --cyan: #00ffff;
+            --red: #ff3333;
+            --bg: #0a0a0a;
+            --grid: #1a1a1a;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: var(--bg);
+            color: var(--phosphor);
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        /* CRT Effects */
+        .crt::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%,
+                rgba(0, 0, 0, 0.25) 50%
+            );
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 1000;
+        }
+        
+        .crt::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                ellipse at center,
+                transparent 0%,
+                rgba(0,0,0,0.4) 90%,
+                rgba(0,0,0,0.9) 100%
+            );
+            pointer-events: none;
+            z-index: 1001;
+        }
+        
+        /* Screen glow */
+        .screen-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                ellipse at center,
+                rgba(51, 255, 0, 0.03) 0%,
+                transparent 70%
+            );
+            pointer-events: none;
+            z-index: 999;
+        }
+        
+        /* === LAYOUT === */
+        #app {
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            grid-template-rows: 40px 1fr 30px;
+            height: 100vh;
+            gap: 1px;
+            background: var(--grid);
+        }
+        
+        /* === HEADER === */
+        header {
+            grid-column: 1 / -1;
+            background: var(--bg);
+            border-bottom: 2px solid var(--phosphor-dim);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            font-size: 16px;
+            font-weight: bold;
+            text-shadow: 0 0 10px var(--phosphor);
+        }
+        
+        .status-bar {
+            display: flex;
+            gap: 30px;
+            font-size: 11px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        .indicator.online { background: var(--phosphor); }
+        .indicator.warn { background: var(--amber); }
+        .indicator.crit { background: var(--red); animation: blink 0.5s infinite; }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0; }
+        }
+        
+        /* === LEFT PANEL: CONTROLS === */
+        #controls {
+            background: var(--bg);
+            border-right: 1px solid var(--phosphor-dim);
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .panel-title {
+            color: var(--amber);
+            font-size: 11px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .control-section {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed var(--phosphor-dim);
+        }
+        
+        button {
+            background: transparent;
+            border: 1px solid var(--phosphor);
+            color: var(--phosphor);
+            padding: 8px 15px;
+            font-family: inherit;
+            font-size: 11px;
+            cursor: pointer;
+            width: 100%;
+            margin-bottom: 8px;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: var(--phosphor);
+            color: var(--bg);
+        }
+        
+        button.active {
+            background: var(--phosphor);
+            color: var(--bg);
+            box-shadow: 0 0 15px var(--phosphor);
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 11px;
+        }
+        
+        .metric-value {
+            color: var(--phosphor-bright);
+        }
+        
+        /* === CENTER: VORTEX VISUALIZATION === */
+        #vortex {
+            background: var(--bg);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #vortex-canvas {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .vortex-overlay {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            pointer-events: none;
+        }
+        
+        .overlay-text {
+            font-size: 10px;
+            color: var(--phosphor-dim);
+        }
+        
+        /* === RIGHT PANEL: TELEMETRY === */
+        #telemetry {
+            background: var(--bg);
+            border-left: 1px solid var(--phosphor-dim);
+            padding: 15px;
+            overflow-y: auto;
+        }
+        
+        .log-entry {
+            font-size: 10px;
+            padding: 3px 0;
+            border-bottom: 1px dotted var(--grid);
+        }
+        
+        .log-time {
+            color: var(--amber);
+        }
+        
+        .log-crit { color: var(--red); }
+        .log-warn { color: var(--amber); }
+        .log-info { color: var(--cyan); }
+        
+        /* === FOOTER === */
+        footer {
+            grid-column: 1 / -1;
+            background: var(--bg);
+            border-top: 1px solid var(--phosphor-dim);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--phosphor-dim);
+        }
+        
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: rgba(51, 255, 0, 0.1);
+            animation: scan 8s linear infinite;
+            pointer-events: none;
+            z-index: 1002;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateY(-5px); }
+            100% { transform: translateY(100vh); }
+        }
+        
+        /* === MODAL === */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--bg);
+            border: 2px solid var(--phosphor);
+            padding: 20px;
+            z-index: 2000;
+            min-width: 400px;
+            box-shadow: 0 0 50px rgba(51, 255, 0, 0.3);
+        }
+        
+        .modal.active {
+            display: block;
+        }
+        
+        .modal-title {
+            color: var(--amber);
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--phosphor-dim);
+            padding-bottom: 10px;
+        }
+        
+        pre {
+            background: var(--grid);
+            padding: 10px;
+            overflow-x: auto;
+            font-size: 10px;
+            border: 1px solid var(--phosphor-dim);
+        }
+        
+        /* === RESPONSIVE === */
+        @media (max-width: 1200px) {
+            #app {
+                grid-template-columns: 200px 1fr 250px;
+            }
+        }
+    </style>
+</head>
+<body class="crt">
+    <div class="screen-glow"></div>
+    <div class="scanline"></div>
+    
+    <div id="app">
+        <header>
+            <div class="logo">🛣️ AGENTHIGHWAY // VORTEX_MONITOR v1.0</div>
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="indicator online" id="conn-status"></div>
+                    <span id="conn-text">ONLINE</span>
+                </div>
+                <div class="status-item">
+                    <span>NODES:</span>
+                    <span class="metric-value" id="node-count">0</span>
+                </div>
+                <div class="status-item">
+                    <span>SIGNALS:</span>
+                    <span class="metric-value" id="signal-rate">0/s</span>
+                </div>
+                <div class="status-item">
+                    <span>CYCLE:</span>
+                    <span class="metric-value" id="cycle-count">0</span>
+                </div>
+            </div>
+        </header>
+        
+        <aside id="controls">
+            <div class="control-section">
+                <div class="panel-title">// VORTEX_CONTROL</div>
+                <button onclick="api.rotateVortex()">ROTATE_VORTEX</button>
+                <button onclick="api.pause()" id="pause-btn">PAUSE_SIM</button>
+                <button onclick="api.reset()">RESET_FIELD</button>
+            </div>
+            
+            <div class="control-section">
+                <div class="panel-title">// AGENT_SPAWN</div>
+                <button onclick="api.spawn('sentinel')">SPAWN_SENTINEL</button>
+                <button onclick="api.spawn('architect')">SPAWN_ARCHITECT</button>
+                <button onclick="api.spawn('artisan')">SPAWN_ARTISAN</button>
+                <button onclick="api.spawn('catalyst')">SPAWN_CATALYST</button>
+                <button onclick="api.spawn('phantom')">SPAWN_PHANTOM</button>
+            </div>
+            
+            <div class="control-section">
+                <div class="panel-title">// TELEMETRY</div>
+                <div class="metric">
+                    <span>Critical:</span>
+                    <span class="metric-value" id="metric-crit">0</span>
+                </div>
+                <div class="metric">
+                    <span>Standard:</span>
+                    <span class="metric-value" id="metric-std">0</span>
+                </div>
+                <div class="metric">
+                    <span>Background:</span>
+                    <span class="metric-value" id="metric-bg">0</span>
+                </div>
+                <div class="metric">
+                    <span>Hot Zones:</span>
+                    <span class="metric-value" id="metric-hot">0</span>
+                </div>
+            </div>
+            
+            <div class="control-section">
+                <div class="panel-title">// API</div>
+                <button onclick="api.showDocs()">API_DOCUMENTATION</button>
+                <button onclick="api.exportSnapshot()">EXPORT_SNAPSHOT</button>
+            </div>
+        </aside>
+        
+        <main id="vortex">
+            <canvas id="vortex-canvas"></canvas>
+            <div class="vortex-overlay">
+                <div class="overlay-text">VORTEX_ROTATION: <span id="rotation">0°</span></div>
+                <div class="overlay-text">GRAVITY_WELL: <span id="gravity">ACTIVE</span></div>
+                <div class="overlay-text">INTERFERENCE: <span id="interference">CALC...</span></div>
+            </div>
+        </main>
+        
+        <aside id="telemetry">
+            <div class="panel-title">// SIGNAL_LOG</div>
+            <div id="log-container"></div>
+        </aside>
+        
+        <footer>
+            <span>NO LOGS • NO STORAGE • EPHEMERAL ONLY</span>
+            <span>API: ws://localhost:9000 | REST: http://localhost:9001</span>
+            <span>FPS: <span id="fps">60</span></span>
+        </footer>
+    </div>
+    
+    <!-- API Documentation Modal -->
+    <div id="api-modal" class="modal">
+        <div class="modal-title">// AGENTHIGHWAY_API v1.0</div>
+        <pre id="api-docs"></pre>
+        <button onclick="api.hideDocs()">CLOSE</button>
+    </div>
+    
+    <script src="vortex-visualizer.js"></script>
+    <script src="api-client.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

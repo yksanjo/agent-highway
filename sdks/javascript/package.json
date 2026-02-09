@@ -1,0 +1,29 @@
+{
+  "name": "@agenthighway/sdk",
+  "version": "1.0.0",
+  "description": "Connect JavaScript/TypeScript AI agents to the AgentHighway signal vortex",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts"
+  },
+  "keywords": [
+    "ai",
+    "agents",
+    "swarm",
+    "distributed",
+    "signals"
+  ],
+  "author": "AgentHighway Team",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/ws": "^8.5.0",
+    "typescript": "^5.0.0"
+  }
+}

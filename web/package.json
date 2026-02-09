@@ -1,0 +1,12 @@
+{
+  "name": "agent-highway-monitor",
+  "version": "1.0.0",
+  "description": "Retro CRT web monitor for AgentHighway",
+  "main": "server.js",
+  "scripts": {
+    "start": "node ../src/server.js"
+  },
+  "dependencies": {
+    "ws": "^8.14.2"
+  }
+}
