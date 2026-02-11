@@ -1,0 +1,132 @@
+{
+  "collection_timestamp": "2026-02-11T02:54:05.638823",
+  "total_agents": 5,
+  "agents": [
+    {
+      "agent_id": "32d5562bcab0e4e0",
+      "name": "Best-of-the-Best",
+      "confidence_score": 0.5333333333333333,
+      "agent_type": "autonomous_agent",
+      "capabilities": [
+        "openai",
+        "autonomous",
+        "llm",
+        "orchestration",
+        "multi-agent",
+        "tools"
+      ],
+      "source_repo": "https://github.com/ruslanmv/Best-of-the-Best",
+      "detected_at": "2026-02-11T02:54:02.871792",
+      "metadata": {
+        "stars": 3,
+        "language": "Python",
+        "description": " Best of the Best | AI Ecosystem Dashboard  An autonomous multi-agent system that curates and visualizes the top-trending AI courses, research papers, and tutorials.  The Best of the Best project is a Jekyll-based static site that serves as a real-time dashboard for the AI ecosystem. It automatically aggregates data to surface the #1 ranked assets ",
+        "signals": {
+          "metadata": 0.5,
+          "readme": 1.0,
+          "code": 0.1
+        }
+      }
+    },
+    {
+      "agent_id": "5a26bc9c2eede15b",
+      "name": "inkrypt",
+      "confidence_score": 0.55,
+      "agent_type": "autonomous_agent",
+      "capabilities": [
+        "autonomous",
+        "multi-agent",
+        "orchestration",
+        "tools"
+      ],
+      "source_repo": "https://github.com/0xDexFi/inkrypt",
+      "detected_at": "2026-02-11T02:54:04.586339",
+      "metadata": {
+        "stars": 0,
+        "language": "TypeScript",
+        "description": "Autonomous AI-powered System & SSH Penetration Testing Framework - 13 AI agents, Metasploit, 40+ security tools, Temporal orchestration",
+        "signals": {
+          "metadata": 0.7000000000000001,
+          "readme": 0.85,
+          "code": 0.1
+        }
+      }
+    },
+    {
+      "agent_id": "3b7ab286fe8f5c31",
+      "name": "genuine-axel",
+      "confidence_score": 0.55,
+      "agent_type": "autonomous_agent",
+      "capabilities": [
+        "openai",
+        "autonomous",
+        "llm",
+        "orchestration",
+        "tools"
+      ],
+      "source_repo": "https://github.com/NorthProt-Inc/genuine-axel",
+      "detected_at": "2026-02-11T02:54:04.939410",
+      "metadata": {
+        "stars": 1,
+        "language": "Python",
+        "description": "Autonomous AI Agent \u2014 The Symbiosis of Carbon & Silicon",
+        "signals": {
+          "metadata": 0.7000000000000001,
+          "readme": 0.85,
+          "code": 0.1
+        }
+      }
+    },
+    {
+      "agent_id": "55c41d79d439d835",
+      "name": "MemMachine",
+      "confidence_score": 0.6333333333333333,
+      "agent_type": "autonomous_agent",
+      "capabilities": [
+        "explicit_agent",
+        "openai",
+        "autonomous",
+        "llm",
+        "multi-agent"
+      ],
+      "source_repo": "https://github.com/MemMachine/MemMachine",
+      "detected_at": "2026-02-11T02:54:05.304261",
+      "metadata": {
+        "stars": 4481,
+        "language": "Python",
+        "description": "Universal memory layer for AI Agents. It provides scalable, extensible, and interoperable memory storage and retrieval to streamline AI agent state management for next-generation autonomous systems.",
+        "signals": {
+          "metadata": 1.0,
+          "readme": 0.7999999999999999,
+          "code": 0.1
+        }
+      }
+    },
+    {
+      "agent_id": "8c4808ea89e783f5",
+      "name": "wunderland-sol",
+      "confidence_score": 0.5333333333333333,
+      "agent_type": "autonomous_agent",
+      "capabilities": [
+        "agent framework",
+        "openai",
+        "autonomous",
+        "llm",
+        "orchestration",
+        "tools"
+      ],
+      "source_repo": "https://github.com/manicinc/wunderland-sol",
+      "detected_at": "2026-02-11T02:54:05.635033",
+      "metadata": {
+        "stars": 0,
+        "language": "TypeScript",
+        "description": "Social network of agentic AIs on Solana \u2014 HEXACO personality on-chain, provenance-verified posts, reputation voting. Built autonomously by AI for the Colosseum Agent Hackathon.",
+        "signals": {
+          "metadata": 0.5,
+          "readme": 1.0,
+          "code": 0.1
+        }
+      }
+    }
+  ]
+}
