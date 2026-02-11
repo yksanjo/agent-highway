@@ -40,105 +40,134 @@
 ╚══════════════════════════════════════════════════════════════════════════╝
 ```
 
-## 🚀 What's Included
+## ⚠️ Project Status: MVP (Functional Prototype)
 
-### 📦 Bundled Collectors
+**What Works Today:**
+- ✅ **GitHub Collector** - Scans repos and detects AI agents with confidence scoring
+- ✅ **Agent Detection** - Multi-factor analysis (metadata, README, code patterns)
+- ✅ **Terminal Dashboard** - Live visualization with Rich
+- ✅ **JSON Storage** - Export and query discovered agents
+- ✅ **OpenClaw Scanner** - Track agent deployments
 
-| Collector | Status | Source | Description |
-|-----------|--------|--------|-------------|
-| `github` | ✅ Ready | GitHub API | Agent repos, releases, forks |
-| `openclaw` | ✅ Ready | GitHub + Network | OpenClaw deployments |
-| `discord` | 🔄 WIP | Discord Gateway | Bot discovery |
-| `telegram` | 🔄 WIP | Telegram API | Bot monitoring |
-| `pypi` | 🔄 WIP | PyPI RSS | Package tracking |
-| `docker` | 🔄 WIP | Docker Hub | Container monitoring |
+**In Development:**
+- 🚧 Discord/Telegram collectors
+- 🚧 Web dashboard (FastAPI-based)
+- 🚧 ML-based detection models
 
-### 🧠 Intelligence Modules
+## 🎬 See It In Action
 
-- **Agent Detector**: Multi-factor confidence scoring
-- **Behavior Analyzer**: Pattern recognition
-- **Network Graph**: Relationship mapping
-- **Trend Predictor**: Growth forecasting
-- **Swarm Detector**: Coordinated agent groups
-
-## 🛠️ Quick Start
+### Real Test Run (2025-02-10)
 
 ```bash
-# Enter the highway
+$ python -m collectors.github
+🔍 Starting GitHub agent discovery (max 20 repos)...
+📦 Found 20 potential repositories
+  ✅ Found agent: Best-of-the-Best (confidence: 0.53)
+  ✅ Found agent: inkrypt (confidence: 0.55)
+  ✅ Found agent: genuine-axel (confidence: 0.55)
+  ✅ Found agent: MemMachine (confidence: 0.63)
+  ✅ Found agent: wunderland-sol (confidence: 0.53)
+
+🎯 Total agents discovered: 5
+💾 Saved 5 agents to ./data/agents_20260211_025405.json
+```
+
+**Recent Discoveries:**
+| Agent | Type | Confidence | Stars |
+|-------|------|------------|-------|
+| [MemMachine](https://github.com/MemMachine/MemMachine) | Autonomous | 0.63 | 4,481 |
+| [inkrypt](https://github.com/0xDexFi/inkrypt) | Autonomous | 0.55 | 0 |
+| [genuine-axel](https://github.com/NorthProt-Inc/genuine-axel) | Autonomous | 0.55 | 1 |
+| [Best-of-the-Best](https://github.com/ruslanmv/Best-of-the-Best) | Autonomous | 0.53 | 3 |
+| [wunderland-sol](https://github.com/manicinc/wunderland-sol) | Autonomous | 0.53 | 0 |
+
+*[View full results](data/agents_20260211_025405.json)*
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Python 3.10+
+- (Optional) GitHub token for higher rate limits
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourname/agent-highway.git
 cd agent-highway
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Configure your tokens
-cp config/example.env config/.env
-vim config/.env
+# (Optional) Configure GitHub token for better rate limits
+export GITHUB_TOKEN="your_token_here"
+```
 
-# Start collecting
-python -m highway.collect --all
+### Run the Collector
 
-# Launch dashboard
+```bash
+# Run GitHub collector (works without API token!)
+python -m collectors.github
+
+# Or use the unified runner
+python -m highway.collect --source github
+```
+
+### Launch Dashboard
+
+```bash
+# Terminal dashboard
 python -m highway.dashboard
+
+# Or use run.py
+python run.py dashboard
 ```
 
-## 📊 Highway Status
+## 📊 Capabilities
 
-```
-Current Traffic Report:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🤖 Total Agents Discovered:      10,000+
-📦 OpenClaw Deployments:           42
-🌐 GitHub Agent Repos:          9,847
-💬 Discord Bots Tracked:        1,234
-📱 Telegram Bots:                 567
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🛣️  Highway Status:          OPERATIONAL
-⚡ Processing Speed:          1,000 events/sec
-📈 Growth Rate:              +15% / month
-```
+### Working Collectors
 
-## 🗺️ Project Structure
+| Collector | Status | Rate Limit | Auth Required |
+|-----------|--------|------------|---------------|
+| GitHub | ✅ Production | 60/hr (5000/hr w/ token) | Optional |
+| OpenClaw | ✅ Production | N/A | No |
+| Discord | 🚧 Planned | N/A | Yes |
+| Telegram | 🚧 Planned | N/A | Yes |
+
+### Detection Methodology
+
+Agent Highway uses multi-factor confidence scoring:
+
+1. **Metadata Analysis** (20%) - Description, topics, keywords
+2. **README Analysis** (40%) - Content patterns, framework mentions
+3. **Code Analysis** (40%) - Config files, dependencies, patterns
+
+**Confidence Threshold:** 0.5+ for agent classification
+
+## 📁 Project Structure
 
 ```
 agent-highway/
 ├── README.md                 # This file
-├── requirements.txt          # All dependencies
-├── highway/                  # Core highway system
-│   ├── __init__.py
+├── requirements.txt          # Dependencies
+├── run.py                    # CLI entry point
+├── highway/                  # Core system
 │   ├── collect.py           # Unified collector runner
 │   ├── process.py           # Stream processing
 │   ├── detect.py            # Agent detection
-│   ├── analyze.py           # Intelligence analysis
-│   └── dashboard.py         # Visualization
+│   ├── dashboard.py         # Terminal dashboard
+│   ├── core.py              # Main orchestrator
+│   └── storage.py           # Data persistence
 ├── collectors/              # Data collectors
-│   ├── github.py           # GitHub agent collector
-│   ├── openclaw.py         # OpenClaw scanner
-│   ├── discord.py          # Discord bot tracker
-│   └── telegram.py         # Telegram bot tracker
-├── highway/                 # Core engine
-│   ├── router.py           # Message routing
-│   ├── detector.py         # Agent detection
-│   ├── resolver.py         # Identity resolution
-│   └── predictor.py        # Trend prediction
+│   ├── github.py           # GitHub agent collector ⭐
+│   └── openclaw.py         # OpenClaw scanner ⭐
 ├── insights/                # Intelligence layer
 │   ├── network.py          # Network analysis
 │   ├── trends.py           # Trend analysis
 │   └── swarms.py           # Swarm detection
-├── web/                     # Web interface
-│   ├── app.py              # FastAPI application
-│   ├── dashboard.html      # Web dashboard
-│   └── static/             # Assets
-├── config/                  # Configuration
-│   ├── highway.yaml        # Main config
-│   └── example.env         # Environment template
-├── docs/                    # Documentation
-│   ├── ARCHITECTURE.md     # System design
-│   ├── API.md              # API reference
-│   └── DEPLOYMENT.md       # Deployment guide
-└── data/                    # Data storage
-    ├── raw/                # Raw collected data
-    ├── processed/          # Processed data
-    └── insights/           # Intelligence outputs
+├── data/                    # Discovered agents
+│   └── agents_*.json       # Collection outputs
+└── tests/                   # Test suite
 ```
 
 ## 🔧 Configuration
@@ -162,150 +191,122 @@ collectors:
   openclaw:
     enabled: true
     scan_github: true
-    scan_telegram: false
-    scan_discord: false
-    
-  discord:
-    enabled: false  # Requires bot token
-    
-  telegram:
-    enabled: false  # Requires bot token
 
-processing:
-  batch_size: 100
-  flush_interval: 5s
-  
 detection:
   confidence_threshold: 0.6
   min_signals: 3
   
 storage:
-  type: "json"  # json, sqlite, postgresql
+  type: "json"
   path: "./data"
-  
-dashboard:
-  enabled: true
-  port: 8080
-  refresh_interval: 30s
 ```
 
 ## 🎮 Commands
 
 ```bash
 # Collection
-python -m highway.collect --source github
-python -m highway.collect --source openclaw
-python -m highway.collect --all
+python run.py collect --source github
+python run.py collect --source openclaw
+python run.py collect --all
 
 # Analysis
-python -m highway.analyze --network
-python -m highway.analyze --trends
-python -m highway.analyze --swarms
+python run.py analyze --network
+python run.py analyze --trends
 
 # Dashboard
-python -m highway.dashboard --port 8080
+python run.py dashboard
 
-# API Server
-python -m highway.api --port 8000
-
-# Full Pipeline
-python -m highway.run --continuous
+# Full status
+python run.py status
 ```
 
-## 📡 API Endpoints
-
-```bash
-# Get all agents
-curl http://localhost:8000/api/v1/agents
-
-# Get agent by ID
-curl http://localhost:8000/api/v1/agents/{id}
-
-# Get OpenClaw deployments
-curl http://localhost:8000/api/v1/openclaw
-
-# Get network graph
-curl http://localhost:8000/api/v1/network
-
-# Get trend analysis
-curl http://localhost:8000/api/v1/trends
-
-# WebSocket for live updates
-ws://localhost:8000/ws/live
-```
-
-## 🔌 Integration
+## 🔌 Integration Example
 
 ```python
-# Use Agent Highway in your code
 from highway import AgentHighway
 
+# Initialize
 highway = AgentHighway()
 
-# Start collecting
+# Collect from GitHub
 await highway.collect(source="github")
 
 # Query agents
-agents = await highway.query(
-    type="autonomous",
-    platform="github",
-    min_confidence=0.7
+agents = highway.query(
+    min_confidence=0.6,
+    agent_type="autonomous_agent"
 )
 
-# Get insights
-trends = await highway.analyze.trends()
-network = await highway.analyze.network()
+print(f"Found {len(agents)} high-confidence agents")
 ```
 
-## 🛡️ Security & Ethics
+## 🧪 Testing
 
-- **Passive Only**: No active exploitation
-- **Public Data**: Only collect publicly available info
-- **Rate Limited**: Respect API limits
-- **Privacy First**: Anonymize where possible
-- **Transparent**: Open source methodology
+See [TESTING.md](TESTING.md) for verification steps and test procedures.
 
-## 🎯 Roadmap
+```bash
+# Run all tests
+pytest tests/
 
-### Phase 1: Highway Foundation ✅
-- [x] GitHub collector
+# Run specific collector test
+pytest tests/test_github_collector.py -v
+
+# Live test (actually queries GitHub)
+pytest tests/test_github_collector.py::test_live_collection -v
+```
+
+## 🗺️ Roadmap
+
+### Phase 1: Foundation ✅ 
+- [x] GitHub collector with confidence scoring
 - [x] OpenClaw scanner
-- [x] Basic dashboard
+- [x] Terminal dashboard
 - [x] JSON storage
+- [x] Basic test suite
 
-### Phase 2: More Lanes (Week 2)
+### Phase 2: Expansion (Current)
 - [ ] Discord collector
 - [ ] Telegram collector
-- [ ] PyPI collector
-- [ ] Web crawler
+- [ ] Web-based dashboard
+- [ ] SQLite storage option
 
-### Phase 3: Intelligence (Week 3)
-- [ ] ML detection models
+### Phase 3: Intelligence (Planned)
+- [ ] ML-based detection models
 - [ ] Network analysis
 - [ ] Trend prediction
 - [ ] Swarm detection
 
-### Phase 4: Scale (Week 4)
+### Phase 4: Scale (Future)
 - [ ] Distributed collectors
 - [ ] Real-time streaming
-- [ ] Advanced analytics
 - [ ] Public API
+- [ ] Community submissions
 
 ## 🤝 Contributing
 
-Join the highway construction crew:
+Contributions welcome! Areas we need help:
 
-1. Add new collectors
-2. Improve detection algorithms
-3. Build better visualizations
-4. Share agent intelligence
+1. **New Collectors** - Discord, Telegram, PyPI, npm
+2. **Detection Improvements** - Better ML models, more signals
+3. **Dashboard** - Web UI improvements
+4. **Documentation** - Tutorials, examples
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## 🛡️ Security & Ethics
+
+- **Passive Only**: No active exploitation or unauthorized access
+- **Public Data**: Only collect publicly available information
+- **Rate Limited**: Respect API limits and service terms
+- **Privacy First**: Anonymize where possible
+- **Transparent**: Open source methodology
 
 ## 📜 License
 
-MIT - See LICENSE
+MIT - See [LICENSE](LICENSE)
 
 ---
 
-**All aboard the Agent Highway! 🛣️🤖**
+**Last Verified:** 2025-02-10 | [View Test Results](data/agents_20260211_025405.json)
 
-*Mapping the autonomous future, one agent at a time.*
+*Mapping the autonomous future, one agent at a time.* 🛣️🤖

@@ -1,0 +1,472 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://openclaw.dev/schema/openclaw.config.json",
+  "title": "OpenClaw Configuration",
+  "description": "Configuration schema for OpenClaw agent gateway",
+  "type": "object",
+  "required": ["channels", "gateway", "talk"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "description": "Metadata about the configuration",
+      "properties": {
+        "lastTouchedVersion": {
+          "type": "string",
+          "description": "Version of OpenClaw that last modified this config",
+          "pattern": "^\\d{4}\\.\\d+\\.\\d+$"
+        },
+        "lastTouchedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 timestamp of last modification"
+        }
+      }
+    },
+    "wizard": {
+      "type": "object",
+      "description": "Wizard execution history",
+      "properties": {
+        "lastRunAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "lastRunVersion": {
+          "type": "string"
+        },
+        "lastRunCommand": {
+          "type": "string",
+          "enum": ["doctor", "setup", "config", "update"]
+        },
+        "lastRunMode": {
+          "type": "string",
+          "enum": ["local", "cloudflare", "production"]
+        }
+      }
+    },
+    "agents": {
+      "type": "object",
+      "description": "Agent configuration defaults",
+      "properties": {
+        "defaults": {
+          "type": "object",
+          "properties": {
+            "model": {
+              "type": "object",
+              "properties": {
+                "primary": {
+                  "type": "string",
+                  "description": "Primary model identifier (e.g., 'deepseek/deepseek-chat')"
+                }
+              }
+            },
+            "models": {
+              "type": "object",
+              "description": "Model configurations keyed by model ID",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "alias": {
+                    "type": "string",
+                    "description": "Short alias for the model"
+                  },
+                  "temperature": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 2
+                  },
+                  "maxTokens": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                }
+              }
+            },
+            "maxConcurrent": {
+              "type": "integer",
+              "description": "Maximum concurrent agents",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 4
+            },
+            "subagents": {
+              "type": "object",
+              "properties": {
+                "maxConcurrent": {
+                  "type": "integer",
+                  "description": "Maximum concurrent subagents",
+                  "minimum": 1,
+                  "maximum": 100,
+                  "default": 8
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "messages": {
+      "type": "object",
+      "description": "Message handling configuration",
+      "properties": {
+        "ackReactionScope": {
+          "type": "string",
+          "description": "When to show acknowledgment reactions",
+          "enum": ["group-mentions", "all", "none"],
+          "default": "group-mentions"
+        }
+      }
+    },
+    "commands": {
+      "type": "object",
+      "description": "Command configuration",
+      "properties": {
+        "native": {
+          "type": "string",
+          "description": "Native command handling mode",
+          "enum": ["auto", "enabled", "disabled"],
+          "default": "auto"
+        },
+        "nativeSkills": {
+          "type": "string",
+          "enum": ["auto", "enabled", "disabled"],
+          "default": "auto"
+        },
+        "restart": {
+          "type": "boolean",
+          "description": "Enable restart command",
+          "default": true
+        }
+      }
+    },
+    "channels": {
+      "type": "object",
+      "description": "Channel configurations for different platforms",
+      "minProperties": 1,
+      "properties": {
+        "telegram": {
+          "type": "object",
+          "description": "Telegram bot configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "botToken": {
+              "type": "string",
+              "description": "Telegram bot token (use env var: ${TELEGRAM_BOT_TOKEN})"
+            },
+            "dmPolicy": {
+              "type": "string",
+              "description": "Direct message handling policy",
+              "enum": ["pairing", "open", "closed"],
+              "default": "pairing"
+            },
+            "groupPolicy": {
+              "type": "string",
+              "description": "Group chat handling policy",
+              "enum": ["allowlist", "blocklist", "open"],
+              "default": "allowlist"
+            },
+            "streamMode": {
+              "type": "string",
+              "description": "Message streaming mode",
+              "enum": ["full", "partial", "none"],
+              "default": "partial"
+            },
+            "groups": {
+              "type": "object",
+              "description": "Group-specific configurations",
+              "additionalProperties": {
+                "type": "object",
+                "properties": {
+                  "requireMention": {
+                    "type": "boolean",
+                    "description": "Require @mention to trigger bot"
+                  },
+                  "allowedUsers": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "allowedRoles": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "rateLimit": {
+              "type": "object",
+              "properties": {
+                "messagesPerMinute": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "burstSize": {
+                  "type": "integer",
+                  "minimum": 1
+                }
+              }
+            }
+          },
+          "required": ["botToken"]
+        },
+        "discord": {
+          "type": "object",
+          "description": "Discord bot configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "token": {
+              "type": "string",
+              "description": "Discord bot token (use env var: ${DISCORD_TOKEN})"
+            },
+            "groupPolicy": {
+              "type": "string",
+              "enum": ["allowlist", "blocklist", "open"],
+              "default": "allowlist"
+            },
+            "intents": {
+              "type": "object",
+              "description": "Discord gateway intents",
+              "properties": {
+                "guilds": {
+                  "type": "boolean"
+                },
+                "guildMembers": {
+                  "type": "boolean"
+                },
+                "guildMessages": {
+                  "type": "boolean"
+                },
+                "directMessages": {
+                  "type": "boolean"
+                },
+                "messageContent": {
+                  "type": "boolean"
+                }
+              }
+            },
+            "rateLimit": {
+              "type": "object",
+              "properties": {
+                "commandsPerSecond": {
+                  "type": "number",
+                  "minimum": 0.1
+                }
+              }
+            }
+          },
+          "required": ["token"]
+        }
+      }
+    },
+    "talk": {
+      "type": "object",
+      "description": "Talk/LLM API configuration",
+      "required": ["apiKey"],
+      "properties": {
+        "apiKey": {
+          "type": "string",
+          "description": "API key for talk service (use env var: ${TALK_API_KEY})"
+        },
+        "baseUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "Custom API base URL"
+        },
+        "timeout": {
+          "type": "integer",
+          "description": "Request timeout in seconds",
+          "minimum": 1,
+          "default": 60
+        },
+        "retries": {
+          "type": "integer",
+          "description": "Number of retries on failure",
+          "minimum": 0,
+          "default": 3
+        }
+      }
+    },
+    "gateway": {
+      "type": "object",
+      "description": "Gateway server configuration",
+      "required": ["mode"],
+      "properties": {
+        "mode": {
+          "type": "string",
+          "description": "Gateway operating mode",
+          "enum": ["local", "cloudflare"],
+          "default": "local"
+        },
+        "bind": {
+          "type": "string",
+          "description": "Bind address or interface",
+          "default": "lan"
+        },
+        "port": {
+          "type": "integer",
+          "description": "Gateway port number",
+          "minimum": 1,
+          "maximum": 65535,
+          "default": 8080
+        },
+        "auth": {
+          "type": "object",
+          "description": "Authentication configuration",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": ["token", "jwt", "oauth", "none"],
+              "default": "token"
+            },
+            "token": {
+              "type": "string",
+              "description": "Auth token (use env var: ${GATEWAY_AUTH_TOKEN})"
+            },
+            "jwtSecret": {
+              "type": "string",
+              "description": "JWT signing secret (use env var)"
+            },
+            "jwtExpiresIn": {
+              "type": "string",
+              "description": "JWT expiration time",
+              "default": "24h"
+            }
+          }
+        },
+        "tls": {
+          "type": "object",
+          "description": "TLS/SSL configuration",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": false
+            },
+            "certPath": {
+              "type": "string",
+              "description": "Path to TLS certificate"
+            },
+            "keyPath": {
+              "type": "string",
+              "description": "Path to TLS private key"
+            }
+          }
+        },
+        "cors": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "origins": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Allowed CORS origins"
+            }
+          }
+        },
+        "rateLimit": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "default": true
+            },
+            "requestsPerMinute": {
+              "type": "integer",
+              "minimum": 1,
+              "default": 60
+            }
+          }
+        }
+      }
+    },
+    "plugins": {
+      "type": "object",
+      "description": "Plugin configuration",
+      "properties": {
+        "entries": {
+          "type": "object",
+          "description": "Plugin entries keyed by plugin name",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "enabled": {
+                "type": "boolean",
+                "default": false
+              },
+              "path": {
+                "type": "string",
+                "description": "Path to plugin directory or file"
+              },
+              "config": {
+                "type": "object",
+                "description": "Plugin-specific configuration"
+              }
+            },
+            "required": ["enabled"]
+          }
+        },
+        "autoLoad": {
+          "type": "boolean",
+          "description": "Automatically load plugins from plugins directory",
+          "default": false
+        }
+      }
+    },
+    "logging": {
+      "type": "object",
+      "description": "Logging configuration",
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["debug", "info", "warn", "error"],
+          "default": "info"
+        },
+        "format": {
+          "type": "string",
+          "enum": ["json", "text"],
+          "default": "text"
+        },
+        "output": {
+          "type": "string",
+          "description": "Log output path or 'stdout'",
+          "default": "stdout"
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "description": "Security settings",
+      "properties": {
+        "allowedHosts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Allowed hostnames for requests"
+        },
+        "requireAuth": {
+          "type": "boolean",
+          "default": true
+        },
+        "sessionTimeout": {
+          "type": "integer",
+          "description": "Session timeout in minutes",
+          "default": 60
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

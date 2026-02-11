@@ -1,0 +1,1368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent Highway - Beacon Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-tertiary: #1a1a25;
+            --bg-card: rgba(20, 20, 35, 0.95);
+            --text-primary: #e0e0ff;
+            --text-secondary: #8888aa;
+            --accent-cyan: #00ffff;
+            --accent-green: #00ff88;
+            --accent-red: #ff4444;
+            --accent-purple: #ff00ff;
+            --accent-orange: #ffa500;
+            --accent-yellow: #ffcc00;
+            --border-glow: rgba(0, 255, 255, 0.2);
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 50%, #0d0d14 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border-glow);
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 30px rgba(0, 255, 255, 0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-purple), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 13px;
+            margin-top: 2px;
+        }
+
+        .connection-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.connected {
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .status-dot.disconnected {
+            background: var(--accent-red);
+            box-shadow: 0 0 10px var(--accent-red);
+            animation: none;
+        }
+
+        .status-dot.connecting {
+            background: var(--accent-yellow);
+            box-shadow: 0 0 10px var(--accent-yellow);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.1); }
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+            padding: 20px;
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 1200px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-glow);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 255, 255, 0.15);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-icon {
+            width: 32px;
+            height: 32px;
+            background: rgba(0, 255, 255, 0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, rgba(0, 255, 255, 0.05), rgba(0, 255, 255, 0.02));
+            border: 1px solid rgba(0, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-value.cyan { color: var(--accent-cyan); text-shadow: 0 0 20px rgba(0, 255, 255, 0.5); }
+        .stat-value.green { color: var(--accent-green); text-shadow: 0 0 20px rgba(0, 255, 136, 0.5); }
+        .stat-value.purple { color: var(--accent-purple); text-shadow: 0 0 20px rgba(255, 0, 255, 0.5); }
+        .stat-value.orange { color: var(--accent-orange); text-shadow: 0 0 20px rgba(255, 165, 0, 0.5); }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* Agent Status */
+        .agent-status-bar {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-pill {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            font-size: 13px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .status-pill.active { border-color: var(--accent-green); color: var(--accent-green); }
+        .status-pill.idle { border-color: var(--accent-cyan); color: var(--accent-cyan); }
+        .status-pill.ghost { border-color: var(--accent-red); color: var(--accent-red); }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        thead {
+            position: sticky;
+            top: 0;
+            background: var(--bg-tertiary);
+            z-index: 10;
+        }
+
+        th {
+            text-align: left;
+            padding: 12px 15px;
+            color: var(--text-secondary);
+            font-weight: 500;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        tr:hover td {
+            background: rgba(0, 255, 255, 0.03);
+        }
+
+        tr.dead {
+            opacity: 0.5;
+        }
+
+        .agent-id {
+            font-family: 'Courier New', monospace;
+            color: var(--accent-cyan);
+            font-size: 12px;
+        }
+
+        .agent-type {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .agent-type.openclaw { background: rgba(0, 255, 255, 0.15); color: var(--accent-cyan); }
+        .agent-type.a2a { background: rgba(255, 0, 255, 0.15); color: var(--accent-purple); }
+        .agent-type.mcp { background: rgba(0, 255, 136, 0.15); color: var(--accent-green); }
+
+        .last-seen {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .status-badge.active { background: var(--accent-green); box-shadow: 0 0 8px var(--accent-green); }
+        .status-badge.idle { background: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-cyan); }
+        .status-badge.ghost { background: var(--accent-red); box-shadow: 0 0 8px var(--accent-red); }
+
+        /* Event Stream */
+        .event-stream {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .event-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 12px 15px;
+            border-left: 3px solid transparent;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .event-item:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .event-item.BIRTH { border-left-color: var(--accent-green); }
+        .event-item.HEARTBEAT { border-left-color: var(--accent-cyan); }
+        .event-item.TASK_START { border-left-color: var(--accent-purple); }
+        .event-item.TASK_COMPLETE { border-left-color: var(--accent-green); }
+        .event-item.TASK_FAIL { border-left-color: var(--accent-red); }
+        .event-item.DEATH { border-left-color: var(--accent-red); }
+
+        .event-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .event-item.BIRTH .event-icon { background: rgba(0, 255, 136, 0.15); }
+        .event-item.HEARTBEAT .event-icon { background: rgba(0, 255, 255, 0.15); }
+        .event-item.TASK_START .event-icon { background: rgba(255, 0, 255, 0.15); }
+        .event-item.TASK_COMPLETE .event-icon { background: rgba(0, 255, 136, 0.15); }
+        .event-item.TASK_FAIL .event-icon { background: rgba(255, 68, 68, 0.15); }
+        .event-item.DEATH .event-icon { background: rgba(255, 68, 68, 0.15); }
+
+        .event-content {
+            flex: 1;
+        }
+
+        .event-type {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+
+        .event-item.BIRTH .event-type { color: var(--accent-green); }
+        .event-item.HEARTBEAT .event-type { color: var(--accent-cyan); }
+        .event-item.TASK_START .event-type { color: var(--accent-purple); }
+        .event-item.TASK_COMPLETE .event-type { color: var(--accent-green); }
+        .event-item.TASK_FAIL .event-type { color: var(--accent-red); }
+        .event-item.DEATH .event-type { color: var(--accent-red); }
+
+        .event-agent {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+
+        .event-lane {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            text-transform: uppercase;
+            background: rgba(255, 255, 255, 0.1);
+            margin-right: 8px;
+        }
+
+        .event-time {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .event-meta {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+
+        .filter-btn.active {
+            background: rgba(0, 255, 255, 0.15);
+            border-color: var(--accent-cyan);
+            color: var(--accent-cyan);
+        }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 250px;
+            margin-top: 15px;
+        }
+
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 255, 0.5);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* Refresh Indicator */
+        .refresh-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+
+        .refresh-indicator.spinning::before {
+            content: '↻';
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--border-glow);
+            border-radius: 10px;
+            padding: 15px 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            animation: slideUp 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 250px;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .toast.success { border-left: 3px solid var(--accent-green); }
+        .toast.error { border-left: 3px solid var(--accent-red); }
+        .toast.info { border-left: 3px solid var(--accent-cyan); }
+
+        .toast-icon {
+            font-size: 18px;
+        }
+
+        .toast-content {
+            flex: 1;
+        }
+
+        .toast-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .toast-message {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+
+            .agent-status-bar {
+                justify-content: center;
+            }
+        }
+
+        /* Grid Background Effect */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0.3;
+            background-image: 
+                linear-gradient(rgba(0, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }
+
+        /* Loading Skeleton */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Glow Effects */
+        .glow-cyan { box-shadow: 0 0 20px rgba(0, 255, 255, 0.3); }
+        .glow-green { box-shadow: 0 0 20px rgba(0, 255, 136, 0.3); }
+        .glow-red { box-shadow: 0 0 20px rgba(255, 68, 68, 0.3); }
+        .glow-purple { box-shadow: 0 0 20px rgba(255, 0, 255, 0.3); }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <div class="logo">🛣️</div>
+            <div>
+                <h1>Agent Highway</h1>
+                <div class="header-subtitle">Beacon Monitor Dashboard</div>
+            </div>
+        </div>
+        <div class="connection-status">
+            <span class="status-dot connecting" id="statusDot"></span>
+            <span id="statusText">Connecting...</span>
+            <span class="refresh-indicator" id="refreshIndicator">↻ Auto-refresh: 5s</span>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="main-container">
+        <div class="left-column">
+            <!-- Statistics Cards -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value cyan" id="totalAgents">-</div>
+                    <div class="stat-label">Total Agents</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value green" id="activeAgents">-</div>
+                    <div class="stat-label">Active</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value cyan" id="idleAgents">-</div>
+                    <div class="stat-label">Idle</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value purple" id="totalEvents">-</div>
+                    <div class="stat-label">Total Events</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value orange" id="eventsPerMinute">-</div>
+                    <div class="stat-label">Events/Min</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value green" id="totalLiens">-</div>
+                    <div class="stat-label">Liens Collected</div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="chart-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">📊</div>
+                            Lane Distribution
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="laneChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <div class="card-icon">📈</div>
+                            Events Over Time
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="eventsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Agent Monitor -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="card-icon">🤖</div>
+                        Agent Monitor
+                    </div>
+                    <div class="agent-status-bar">
+                        <div class="status-pill active">
+                            <span class="status-badge active"></span>
+                            <span id="activeCount">0</span> Active
+                        </div>
+                        <div class="status-pill idle">
+                            <span class="status-badge idle"></span>
+                            <span id="idleCount">0</span> Idle
+                        </div>
+                        <div class="status-pill ghost">
+                            <span class="status-badge ghost"></span>
+                            <span id="ghostCount">0</span> Ghost
+                        </div>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="agentTable">
+                        <thead>
+                            <tr>
+                                <th>Agent ID</th>
+                                <th>Type</th>
+                                <th>Lane</th>
+                                <th>Status</th>
+                                <th>Last Seen</th>
+                                <th>Tasks</th>
+                            </tr>
+                        </thead>
+                        <tbody id="agentTableBody">
+                            <tr>
+                                <td colspan="6" class="empty-state">
+                                    <div class="empty-state-icon">📡</div>
+                                    <div>Waiting for agent data...</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column - Event Stream -->
+        <div class="right-column">
+            <div class="card" style="height: calc(100vh - 140px); display: flex; flex-direction: column;">
+                <div class="card-header">
+                    <div class="card-title">
+                        <div class="card-icon">📡</div>
+                        Event Stream
+                    </div>
+                </div>
+
+                <!-- Event Filters -->
+                <div class="filters">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="BIRTH">Birth</button>
+                    <button class="filter-btn" data-filter="HEARTBEAT">Heartbeat</button>
+                    <button class="filter-btn" data-filter="TASK">Tasks</button>
+                    <button class="filter-btn" data-filter="DEATH">Death</button>
+                </div>
+
+                <!-- Lane Filters -->
+                <div class="filters">
+                    <button class="filter-btn active" data-lane="all">All Lanes</button>
+                    <button class="filter-btn" data-lane="openclaw">OpenClaw</button>
+                    <button class="filter-btn" data-lane="a2a">A2A</button>
+                    <button class="filter-btn" data-lane="mcp">MCP</button>
+                </div>
+
+                <div class="event-stream" id="eventStream">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📡</div>
+                        <div>Waiting for events...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script>
+        // Configuration
+        const API_BASE_URL = 'https://agent-highway-origin-v2.yksanjo.workers.dev';
+        const WS_URL = 'wss://agent-highway-origin-v2.yksanjo.workers.dev/beacon/ws';
+        const REFRESH_INTERVAL = 5000; // 5 seconds
+
+        // State
+        let ws = null;
+        let reconnectAttempts = 0;
+        let maxReconnectAttempts = 10;
+        let reconnectDelay = 1000;
+        let agents = [];
+        let events = [];
+        let eventFilter = 'all';
+        let laneFilter = 'all';
+        let charts = {};
+        let refreshTimer = null;
+
+        // Event type configurations
+        const eventConfig = {
+            BIRTH: { icon: '👶', color: '#00ff88' },
+            HEARTBEAT: { icon: '💓', color: '#00ffff' },
+            TASK_START: { icon: '▶️', color: '#ff00ff' },
+            TASK_COMPLETE: { icon: '✅', color: '#00ff88' },
+            TASK_FAIL: { icon: '❌', color: '#ff4444' },
+            DEATH: { icon: '💀', color: '#ff4444' }
+        };
+
+        // Initialize Dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            connectWebSocket();
+            fetchInitialData();
+            setupEventListeners();
+            startAutoRefresh();
+        });
+
+        // Initialize Charts
+        function initCharts() {
+            // Lane Distribution Chart
+            const laneCtx = document.getElementById('laneChart').getContext('2d');
+            charts.lane = new Chart(laneCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['OpenClaw', 'A2A', 'MCP', 'Other'],
+                    datasets: [{
+                        data: [0, 0, 0, 0],
+                        backgroundColor: ['#00ffff', '#ff00ff', '#00ff88', '#ffa500'],
+                        borderColor: '#12121a',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#8888aa',
+                                padding: 15,
+                                font: { size: 11 }
+                            }
+                        }
+                    },
+                    cutout: '60%'
+                }
+            });
+
+            // Events Over Time Chart
+            const eventsCtx = document.getElementById('eventsChart').getContext('2d');
+            charts.events = new Chart(eventsCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Events',
+                        data: [],
+                        borderColor: '#00ffff',
+                        backgroundColor: 'rgba(0, 255, 255, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: '#00ffff',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#8888aa', font: { size: 10 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#8888aa', font: { size: 10 } }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+
+        // WebSocket Connection
+        function connectWebSocket() {
+            updateConnectionStatus('connecting');
+
+            try {
+                ws = new WebSocket(WS_URL);
+
+                ws.onopen = () => {
+                    console.log('WebSocket connected');
+                    updateConnectionStatus('connected');
+                    reconnectAttempts = 0;
+                    reconnectDelay = 1000;
+                    showToast('success', 'Connected', 'Real-time updates active');
+                };
+
+                ws.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        handleWebSocketMessage(data);
+                    } catch (err) {
+                        console.error('Failed to parse WebSocket message:', err);
+                    }
+                };
+
+                ws.onerror = (error) => {
+                    console.error('WebSocket error:', error);
+                    updateConnectionStatus('disconnected');
+                };
+
+                ws.onclose = () => {
+                    console.log('WebSocket closed');
+                    updateConnectionStatus('disconnected');
+                    attemptReconnect();
+                };
+            } catch (err) {
+                console.error('WebSocket connection failed:', err);
+                updateConnectionStatus('disconnected');
+                attemptReconnect();
+            }
+        }
+
+        function attemptReconnect() {
+            if (reconnectAttempts >= maxReconnectAttempts) {
+                showToast('error', 'Connection Failed', 'Max reconnection attempts reached');
+                return;
+            }
+
+            reconnectAttempts++;
+            const delay = Math.min(reconnectDelay * Math.pow(2, reconnectAttempts - 1), 30000);
+            
+            console.log(`Reconnecting in ${delay}ms (attempt ${reconnectAttempts})`);
+            
+            setTimeout(() => {
+                connectWebSocket();
+            }, delay);
+        }
+
+        function handleWebSocketMessage(data) {
+            switch (data.type) {
+                case 'beacon':
+                    addEvent(data.payload);
+                    break;
+                case 'agent_update':
+                    updateAgent(data.payload);
+                    break;
+                case 'stats':
+                    updateStats(data.payload);
+                    break;
+                case 'topology':
+                    updateAgents(data.payload.agents || []);
+                    break;
+            }
+        }
+
+        // API Fetch Functions
+        async function fetchInitialData() {
+            try {
+                await Promise.all([
+                    fetchHealth(),
+                    fetchAgents(),
+                    fetchEvents()
+                ]);
+            } catch (err) {
+                console.error('Failed to fetch initial data:', err);
+                showToast('error', 'Data Error', 'Failed to load initial data');
+            }
+        }
+
+        async function fetchHealth() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                updateStats(data);
+                return data;
+            } catch (err) {
+                console.error('Health fetch failed:', err);
+                throw err;
+            }
+        }
+
+        async function fetchAgents() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/agents/live`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                updateAgents(data.agents || []);
+                return data;
+            } catch (err) {
+                console.error('Agents fetch failed:', err);
+                // Fallback to topology endpoint
+                try {
+                    const topoResponse = await fetch(`${API_BASE_URL}/api/v1/topology`);
+                    if (topoResponse.ok) {
+                        const topoData = await topoResponse.json();
+                        updateAgents(topoData.agents || []);
+                    }
+                } catch (fallbackErr) {
+                    console.error('Fallback fetch failed:', fallbackErr);
+                }
+                throw err;
+            }
+        }
+
+        async function fetchEvents() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/beacon/stream?limit=50`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                if (data.events) {
+                    events = data.events.reverse();
+                    renderEvents();
+                }
+                return data;
+            } catch (err) {
+                console.error('Events fetch failed:', err);
+                throw err;
+            }
+        }
+
+        // Update Functions
+        function updateStats(data) {
+            if (data.totalAgents !== undefined) {
+                animateValue('totalAgents', parseInt(document.getElementById('totalAgents').textContent) || 0, data.totalAgents);
+            }
+            if (data.activeAgents !== undefined) {
+                animateValue('activeAgents', parseInt(document.getElementById('activeAgents').textContent) || 0, data.activeAgents);
+            }
+            if (data.idleAgents !== undefined) {
+                animateValue('idleAgents', parseInt(document.getElementById('idleAgents').textContent) || 0, data.idleAgents);
+            }
+            if (data.totalEvents !== undefined) {
+                animateValue('totalEvents', parseInt(document.getElementById('totalEvents').textContent) || 0, data.totalEvents);
+            }
+            if (data.eventsPerMinute !== undefined) {
+                document.getElementById('eventsPerMinute').textContent = data.eventsPerMinute.toFixed(1);
+            }
+            if (data.totalLiens !== undefined) {
+                animateValue('totalLiens', parseInt(document.getElementById('totalLiens').textContent) || 0, data.totalLiens);
+            }
+
+            // Update charts if lane data available
+            if (data.laneDistribution) {
+                updateLaneChart(data.laneDistribution);
+            }
+
+            // Update events chart if history available
+            if (data.eventHistory) {
+                updateEventsChart(data.eventHistory);
+            }
+        }
+
+        function updateAgents(newAgents) {
+            agents = newAgents;
+            renderAgentTable();
+            updateAgentCounts();
+            updateLaneChartFromAgents();
+        }
+
+        function updateAgent(agentData) {
+            const index = agents.findIndex(a => a.id === agentData.id);
+            if (index >= 0) {
+                agents[index] = { ...agents[index], ...agentData };
+            } else {
+                agents.push(agentData);
+            }
+            renderAgentTable();
+            updateAgentCounts();
+        }
+
+        function updateAgentCounts() {
+            const active = agents.filter(a => a.status === 'active').length;
+            const idle = agents.filter(a => a.status === 'idle').length;
+            const ghost = agents.filter(a => a.status === 'ghost' || a.status === 'dead').length;
+
+            document.getElementById('activeCount').textContent = active;
+            document.getElementById('idleCount').textContent = idle;
+            document.getElementById('ghostCount').textContent = ghost;
+        }
+
+        function addEvent(event) {
+            events.unshift(event);
+            if (events.length > 100) events.pop();
+            renderEvents();
+            
+            // Update total events count
+            const currentTotal = parseInt(document.getElementById('totalEvents').textContent) || 0;
+            document.getElementById('totalEvents').textContent = currentTotal + 1;
+        }
+
+        // Render Functions
+        function renderAgentTable() {
+            const tbody = document.getElementById('agentTableBody');
+            
+            if (agents.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="empty-state">
+                            <div class="empty-state-icon">🤖</div>
+                            <div>No agents found</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = agents.map(agent => {
+                const isDead = agent.status === 'ghost' || agent.status === 'dead';
+                const statusClass = agent.status || 'idle';
+                const lane = agent.lane || 'unknown';
+                const agentType = agent.type || lane;
+                
+                return `
+                    <tr class="${isDead ? 'dead' : ''}">
+                        <td><span class="agent-id">${agent.id || 'unknown'}</span></td>
+                        <td><span class="agent-type ${agentType.toLowerCase()}">${agentType}</span></td>
+                        <td><span class="event-lane">${lane}</span></td>
+                        <td>
+                            <span class="status-badge ${statusClass}"></span>
+                            ${agent.status || 'unknown'}
+                        </td>
+                        <td class="last-seen">${formatTime(agent.lastSeen || agent.updatedAt)}</td>
+                        <td>${agent.taskCount || 0}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderEvents() {
+            const container = document.getElementById('eventStream');
+            
+            const filteredEvents = events.filter(event => {
+                const typeMatch = eventFilter === 'all' || 
+                    event.type === eventFilter || 
+                    (eventFilter === 'TASK' && event.type.startsWith('TASK_'));
+                const laneMatch = laneFilter === 'all' || event.lane === laneFilter;
+                return typeMatch && laneMatch;
+            });
+
+            if (filteredEvents.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📡</div>
+                        <div>No events match current filters</div>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = filteredEvents.map(event => {
+                const config = eventConfig[event.type] || { icon: '📡', color: '#888' };
+                return `
+                    <div class="event-item ${event.type}">
+                        <div class="event-icon">${config.icon}</div>
+                        <div class="event-content">
+                            <div class="event-type">${event.type}</div>
+                            <div class="event-agent">${event.agentId || 'Unknown'}</div>
+                            <div class="event-meta">
+                                <span class="event-lane">${event.lane || 'unknown'}</span>
+                                <span class="event-time">${formatTime(event.timestamp)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function updateLaneChart(distribution) {
+            charts.lane.data.datasets[0].data = [
+                distribution.openclaw || 0,
+                distribution.a2a || 0,
+                distribution.mcp || 0,
+                distribution.other || 0
+            ];
+            charts.lane.update('none');
+        }
+
+        function updateLaneChartFromAgents() {
+            const distribution = { openclaw: 0, a2a: 0, mcp: 0, other: 0 };
+            agents.forEach(agent => {
+                const lane = (agent.lane || 'other').toLowerCase();
+                if (distribution[lane] !== undefined) {
+                    distribution[lane]++;
+                } else {
+                    distribution.other++;
+                }
+            });
+            updateLaneChart(distribution);
+        }
+
+        function updateEventsChart(history) {
+            const labels = history.map(h => formatTimeLabel(h.timestamp));
+            const data = history.map(h => h.count);
+            
+            charts.events.data.labels = labels;
+            charts.events.data.datasets[0].data = data;
+            charts.events.update('none');
+        }
+
+        // Utility Functions
+        function updateConnectionStatus(status) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            
+            dot.className = 'status-dot ' + status;
+            
+            switch (status) {
+                case 'connected':
+                    text.textContent = 'Live';
+                    break;
+                case 'disconnected':
+                    text.textContent = 'Offline';
+                    break;
+                case 'connecting':
+                    text.textContent = 'Connecting...';
+                    break;
+            }
+        }
+
+        function animateValue(id, start, end) {
+            const element = document.getElementById(id);
+            const duration = 500;
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeProgress = 1 - Math.pow(1 - progress, 3);
+                const current = Math.floor(start + (end - start) * easeProgress);
+                element.textContent = current;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return 'Never';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diff = Math.floor((now - date) / 1000);
+            
+            if (diff < 60) return 'Just now';
+            if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+            if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+            return date.toLocaleDateString();
+        }
+
+        function formatTimeLabel(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function showToast(type, title, message) {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                info: 'ℹ️'
+            };
+            
+            toast.innerHTML = `
+                <div class="toast-icon">${icons[type]}</div>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+            `;
+            
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(20px)';
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // Event Listeners
+        function setupEventListeners() {
+            // Filter buttons
+            document.querySelectorAll('[data-filter]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-filter]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    eventFilter = btn.dataset.filter;
+                    renderEvents();
+                });
+            });
+
+            document.querySelectorAll('[data-lane]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('[data-lane]').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    laneFilter = btn.dataset.lane;
+                    renderEvents();
+                });
+            });
+        }
+
+        // Auto-refresh
+        function startAutoRefresh() {
+            refreshTimer = setInterval(() => {
+                const indicator = document.getElementById('refreshIndicator');
+                indicator.classList.add('spinning');
+                
+                fetchHealth().catch(() => {});
+                fetchAgents().catch(() => {});
+                
+                setTimeout(() => {
+                    indicator.classList.remove('spinning');
+                }, 1000);
+            }, REFRESH_INTERVAL);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (refreshTimer) clearInterval(refreshTimer);
+            if (ws) ws.close();
+        });
+    </script>
+</body>
+</html>

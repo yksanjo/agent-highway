@@ -17,6 +17,9 @@ fastapi>=0.103.0
 uvicorn>=0.23.0
 websockets>=11.0.0
 
+# DNS Resolution
+dnspython>=2.4.0
+
 # Optional Database
 # sqlite3 (built-in)
 # psycopg2-binary>=2.9.0  # PostgreSQL

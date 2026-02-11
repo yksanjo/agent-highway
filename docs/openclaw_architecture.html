@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw Architecture - Interactive System Diagram</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #12121a 50%, #0d0d14 100%);
+            color: #e0e0ff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        #diagram {
+            width: 100%;
+            height: 100%;
+            cursor: grab;
+        }
+
+        #diagram:active {
+            cursor: grabbing;
+        }
+
+        /* Header */
+        .header {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(10, 10, 20, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            background: linear-gradient(90deg, #00ffff, #ff00ff, #00ff88);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: #8888aa;
+            font-size: 13px;
+        }
+
+        /* Controls Panel */
+        .controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(10, 10, 20, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 220px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
+        }
+
+        .controls h3 {
+            color: #00ffff;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .layer-toggle {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .layer-toggle:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .layer-toggle input {
+            margin-right: 10px;
+            width: 16px;
+            height: 16px;
+            accent-color: #00ffff;
+        }
+
+        .layer-toggle span {
+            font-size: 13px;
+            color: #ccc;
+        }
+
+        .layer-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: auto;
+            box-shadow: 0 0 10px currentColor;
+        }
+
+        .control-buttons {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 8px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #00ffff, #0088ff);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Legend */
+        .legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            background: rgba(10, 10, 20, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 15px 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.1);
+        }
+
+        .legend h4 {
+            color: #00ffff;
+            font-size: 12px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 6px;
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        /* Node Styles */
+        .node rect {
+            stroke-width: 2px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .node:hover rect {
+            filter: brightness(1.3);
+            stroke-width: 3px;
+        }
+
+        .node text {
+            font-size: 12px;
+            font-weight: 600;
+            fill: #fff;
+            pointer-events: none;
+            text-anchor: middle;
+        }
+
+        .node-icon {
+            font-size: 20px;
+            pointer-events: none;
+        }
+
+        /* Link Styles */
+        .link {
+            fill: none;
+            stroke-width: 2px;
+            opacity: 0.6;
+        }
+
+        .link.active {
+            opacity: 1;
+            stroke-width: 3px;
+        }
+
+        /* Packet Animation */
+        .packet {
+            fill: #fff;
+            filter: drop-shadow(0 0 10px #00ffff);
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: absolute;
+            background: rgba(10, 10, 20, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 12px;
+            color: #ccc;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            max-width: 280px;
+            z-index: 200;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .tooltip.visible {
+            opacity: 1;
+        }
+
+        .tooltip h4 {
+            color: #00ffff;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+
+        /* Detail Panel */
+        .detail-panel {
+            position: absolute;
+            right: -400px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 350px;
+            background: rgba(10, 10, 20, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            border-radius: 16px;
+            padding: 25px;
+            z-index: 150;
+            transition: right 0.4s ease;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .detail-panel.open {
+            right: 20px;
+        }
+
+        .detail-panel h2 {
+            color: #00ffff;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+        }
+
+        .detail-panel .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 20px;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+
+        .detail-panel .close-btn:hover {
+            color: #fff;
+        }
+
+        .detail-section {
+            margin-bottom: 15px;
+        }
+
+        .detail-section h4 {
+            color: #ff00ff;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .detail-section p, .detail-section ul {
+            color: #aaa;
+            font-size: 12px;
+            line-height: 1.6;
+        }
+
+        .detail-section ul {
+            padding-left: 18px;
+        }
+
+        .detail-section li {
+            margin-bottom: 4px;
+        }
+
+        /* Grid Background */
+        .grid {
+            stroke: rgba(0, 255, 255, 0.05);
+            stroke-width: 1px;
+        }
+
+        /* Flow Animation Controls */
+        .flow-status {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(10, 10, 20, 0.9);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 12px;
+            color: #888;
+            z-index: 100;
+        }
+
+        .flow-status.active {
+            border-color: #00ff88;
+            color: #00ff88;
+            box-shadow: 0 0 20px rgba(0, 255, 136, 0.3);
+        }
+
+        /* Layer Labels */
+        .layer-label {
+            font-size: 11px;
+            fill: rgba(255, 255, 255, 0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        /* Glow Effects */
+        .glow-cyan { filter: drop-shadow(0 0 8px rgba(0, 255, 255, 0.6)); }
+        .glow-purple { filter: drop-shadow(0 0 8px rgba(255, 0, 255, 0.6)); }
+        .glow-green { filter: drop-shadow(0 0 8px rgba(0, 255, 136, 0.6)); }
+        .glow-orange { filter: drop-shadow(0 0 8px rgba(255, 165, 0, 0.6)); }
+        .glow-red { filter: drop-shadow(0 0 8px rgba(255, 68, 68, 0.6)); }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🔷 OpenClaw Architecture</h1>
+            <p>Interactive System Diagram • Click nodes for details</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <h3>Layer Visibility</h3>
+            <div class="layer-toggle" data-layer="client">
+                <input type="checkbox" checked id="toggle-client">
+                <span>Client Layer</span>
+                <div class="layer-indicator" style="background: #00ffff; color: #00ffff;"></div>
+            </div>
+            <div class="layer-toggle" data-layer="gateway">
+                <input type="checkbox" checked id="toggle-gateway">
+                <span>Gateway Layer</span>
+                <div class="layer-indicator" style="background: #ff00ff; color: #ff00ff;"></div>
+            </div>
+            <div class="layer-toggle" data-layer="sandbox">
+                <input type="checkbox" checked id="toggle-sandbox">
+                <span>Sandbox Layer</span>
+                <div class="layer-indicator" style="background: #00ff88; color: #00ff88;"></div>
+            </div>
+            <div class="layer-toggle" data-layer="storage">
+                <input type="checkbox" checked id="toggle-storage">
+                <span>Storage Layer</span>
+                <div class="layer-indicator" style="background: #ffa500; color: #ffa500;"></div>
+            </div>
+            <div class="layer-toggle" data-layer="external">
+                <input type="checkbox" checked id="toggle-external">
+                <span>External Services</span>
+                <div class="layer-indicator" style="background: #ff4444; color: #ff4444;"></div>
+            </div>
+
+            <div class="control-buttons">
+                <button class="btn btn-primary" id="animateFlow">▶ Animate Request Flow</button>
+                <button class="btn btn-secondary" id="resetView">⟲ Reset View</button>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <h4>Data Flow Types</h4>
+            <div class="legend-item">
+                <div class="legend-dot" style="background: #00ffff; color: #00ffff;"></div>
+                <span>User Request</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background: #ff00ff; color: #ff00ff;"></div>
+                <span>Internal Routing</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background: #00ff88; color: #00ff88;"></div>
+                <span>AI Processing</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot" style="background: #ffa500; color: #ffa500;"></div>
+                <span>Data Storage</span>
+            </div>
+        </div>
+
+        <!-- Flow Status -->
+        <div class="flow-status" id="flowStatus">
+            Ready to animate request flow
+        </div>
+
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detailPanel">
+            <button class="close-btn" onclick="closeDetailPanel()">×</button>
+            <h2 id="detailTitle">Component Details</h2>
+            <div id="detailContent"></div>
+        </div>
+
+        <!-- Tooltip -->
+        <div class="tooltip" id="tooltip"></div>
+
+        <!-- SVG Diagram -->
+        <svg id="diagram"></svg>
+    </div>
+
+    <script>
+        // Architecture Data
+        const architectureData = {
+            nodes: [
+                // Client Layer (Cyan)
+                { id: 'telegram', label: 'Telegram Bot', layer: 'client', x: 150, y: 100, icon: '✈', color: '#00ffff', 
+                  description: 'Primary user interface through Telegram messaging platform',
+                  details: { type: 'Client Interface', tech: 'Python Telegram Bot API', purpose: 'User command handling and message routing' }},
+                { id: 'discord', label: 'Discord Bot', layer: 'client', x: 300, y: 100, icon: '💬', color: '#00ffff',
+                  description: 'Alternative Discord integration for server communities',
+                  details: { type: 'Client Interface', tech: 'Discord.py / Webhooks', purpose: 'Community integration and notifications' }},
+                { id: 'webui', label: 'Web UI', layer: 'client', x: 450, y: 100, icon: '🌐', color: '#00ffff',
+                  description: 'Browser-based dashboard for configuration and monitoring',
+                  details: { type: 'Client Interface', tech: 'React / Next.js', purpose: 'Visual management and real-time monitoring' }},
+
+                // Gateway Layer (Purple)
+                { id: 'worker', label: 'Cloudflare Worker', layer: 'gateway', x: 225, y: 250, icon: '⚡', color: '#ff00ff',
+                  description: 'Edge computing layer for request routing and authentication',
+                  details: { type: 'Edge Gateway', tech: 'Cloudflare Workers (V8 Isolate)', purpose: 'Global edge routing, auth, rate limiting' }},
+                { id: 'websocket', label: 'WebSocket Hub', layer: 'gateway', x: 375, y: 250, icon: '🔌', color: '#ff00ff',
+                  description: 'Real-time bidirectional communication channel',
+                  details: { type: 'Real-time Transport', tech: 'WebSocket API', purpose: 'Live updates and streaming responses' }},
+                { id: 'api', label: 'REST API', layer: 'gateway', x: 525, y: 250, icon: '🔀', color: '#ff00ff',
+                  description: 'Standard HTTP API for external integrations',
+                  details: { type: 'API Gateway', tech: 'OpenAPI 3.0', purpose: 'Third-party integrations and webhooks' }},
+
+                // Sandbox Layer (Green)
+                { id: 'moltbot', label: 'Moltbot Core', layer: 'sandbox', x: 225, y: 400, icon: '🤖', color: '#00ff88',
+                  description: 'Central orchestration engine for agent coordination',
+                  details: { type: 'Core Engine', tech: 'Python / FastAPI', purpose: 'Agent lifecycle management and task distribution' }},
+                { id: 'subagents', label: 'Subagents', layer: 'sandbox', x: 375, y: 400, icon: '👥', color: '#00ff88',
+                  description: 'Specialized worker agents for specific tasks',
+                  details: { type: 'Worker Pool', tech: 'Async Python / Celery', purpose: 'Parallel task execution and load distribution' }},
+                { id: 'skills', label: 'Skills Engine', layer: 'sandbox', x: 525, y: 400, icon: '🛠', color: '#00ff88',
+                  description: 'Modular capability system for extending functionality',
+                  details: { type: 'Plugin System', tech: 'Dynamic Module Loading', purpose: 'Extensible capabilities and integrations' }},
+
+                // Storage Layer (Orange)
+                { id: 'r2', label: 'R2 Storage', layer: 'storage', x: 200, y: 550, icon: '💾', color: '#ffa500',
+                  description: 'Object storage for files and large data',
+                  details: { type: 'Object Storage', tech: 'Cloudflare R2 (S3-compatible)', purpose: 'File storage, backups, artifacts' }},
+                { id: 'kv', label: 'KV Store', layer: 'storage', x: 350, y: 550, icon: '⚡', color: '#ffa500',
+                  description: 'Low-latency key-value data storage',
+                  details: { type: 'Key-Value Store', tech: 'Cloudflare KV', purpose: 'Session data, caching, configuration' }},
+                { id: 'd1', label: 'D1 Database', layer: 'storage', x: 500, y: 550, icon: '🗄', color: '#ffa500',
+                  description: 'Relational database for structured data',
+                  details: { type: 'SQL Database', tech: 'Cloudflare D1 (SQLite)', purpose: 'User data, analytics, relationships' }},
+
+                // External Services (Red)
+                { id: 'aigateway', label: 'AI Gateway', layer: 'external', x: 650, y: 325, icon: '🧠', color: '#ff4444',
+                  description: 'Unified interface to multiple AI providers',
+                  details: { type: 'AI Orchestration', tech: 'Multi-provider API', purpose: 'LLM routing, fallback, cost optimization' }},
+                { id: 'browser', label: 'Browser Render', layer: 'external', x: 650, y: 475, icon: '🖥', color: '#ff4444',
+                  description: 'Headless browser for web scraping and automation',
+                  details: { type: 'Browser Automation', tech: 'Playwright / Puppeteer', purpose: 'Web scraping, PDF generation, testing' }},
+            ],
+            links: [
+                // Client to Gateway
+                { source: 'telegram', target: 'worker', type: 'request' },
+                { source: 'discord', target: 'worker', type: 'request' },
+                { source: 'webui', target: 'websocket', type: 'request' },
+                { source: 'webui', target: 'api', type: 'request' },
+
+                // Gateway to Sandbox
+                { source: 'worker', target: 'moltbot', type: 'internal' },
+                { source: 'websocket', target: 'moltbot', type: 'internal' },
+                { source: 'api', target: 'moltbot', type: 'internal' },
+
+                // Sandbox Internal
+                { source: 'moltbot', target: 'subagents', type: 'internal' },
+                { source: 'moltbot', target: 'skills', type: 'internal' },
+                { source: 'subagents', target: 'skills', type: 'internal' },
+
+                // Sandbox to Storage
+                { source: 'moltbot', target: 'kv', type: 'storage' },
+                { source: 'subagents', target: 'r2', type: 'storage' },
+                { source: 'skills', target: 'd1', type: 'storage' },
+
+                // Sandbox to External
+                { source: 'moltbot', target: 'aigateway', type: 'ai' },
+                { source: 'subagents', target: 'aigateway', type: 'ai' },
+                { source: 'subagents', target: 'browser', type: 'ai' },
+                { source: 'skills', target: 'browser', type: 'ai' },
+            ]
+        };
+
+        // Node Details Database
+        const nodeDetails = {
+            telegram: {
+                title: 'Telegram Bot Interface',
+                sections: [
+                    { title: 'Description', content: 'Primary user-facing interface that handles incoming messages, commands, and callbacks from Telegram users.' },
+                    { title: 'Key Features', content: '<ul><li>Command parsing and routing</li><li>Inline keyboard interactions</li><li>File upload/download handling</li><li>Webhook or long-polling modes</li></ul>' },
+                    { title: 'Scaling', content: 'Supports horizontal scaling through webhook distribution across multiple worker instances.' }
+                ]
+            },
+            discord: {
+                title: 'Discord Integration',
+                sections: [
+                    { title: 'Description', content: 'Discord bot integration for community servers, supporting slash commands and rich embeds.' },
+                    { title: 'Key Features', content: '<ul><li>Slash command support</li><li>Rich message embeds</li><li>Role-based permissions</li><li>Server-wide notifications</li></ul>' },
+                    { title: 'Use Cases', content: 'Community management, automated moderation, scheduled announcements, and collaborative workflows.' }
+                ]
+            },
+            webui: {
+                title: 'Web Dashboard',
+                sections: [
+                    { title: 'Description', content: 'Modern React-based web interface for visual management, monitoring, and configuration.' },
+                    { title: 'Key Features', content: '<ul><li>Real-time activity monitoring</li><li>Agent configuration UI</li><li>Usage analytics dashboard</li><li>Authentication and access control</li></ul>' },
+                    { title: 'Tech Stack', content: 'Next.js, TypeScript, Tailwind CSS, WebSocket client for real-time updates.' }
+                ]
+            },
+            worker: {
+                title: 'Cloudflare Worker',
+                sections: [
+                    { title: 'Description', content: 'Edge-computing layer running on Cloudflare\'s global network for ultra-low latency request handling.' },
+                    { title: 'Key Features', content: '<ul><li>Global edge deployment (300+ locations)</li><li>Sub-millisecond cold starts</li><li>Automatic DDoS protection</li><li>Built-in rate limiting</li></ul>' },
+                    { title: 'Responsibilities', content: 'Request validation, authentication, routing to sandbox, caching, and initial threat filtering.' }
+                ]
+            },
+            websocket: {
+                title: 'WebSocket Hub',
+                sections: [
+                    { title: 'Description', content: 'Persistent bidirectional communication channel for real-time updates and streaming responses.' },
+                    { title: 'Key Features', content: '<ul><li>Connection state management</li><li>Heartbeat/ping-pong handling</li><li>Broadcast capability</li><li>Automatic reconnection</li></ul>' },
+                    { title: 'Use Cases', content: 'Live typing indicators, progress updates, streaming LLM responses, and collaborative editing.' }
+                ]
+            },
+            api: {
+                title: 'REST API Gateway',
+                sections: [
+                    { title: 'Description', content: 'Standard HTTP API following OpenAPI 3.0 specification for third-party integrations.' },
+                    { title: 'Key Features', content: '<ul><li>OAuth 2.0 authentication</li><li>Request/response validation</li><li>API versioning</li><li>Comprehensive documentation</li></ul>' },
+                    { title: 'Integrations', content: 'Zapier, Make.com, custom webhooks, mobile apps, and external service connectors.' }
+                ]
+            },
+            moltbot: {
+                title: 'Moltbot Core Engine',
+                sections: [
+                    { title: 'Description', content: 'Central orchestration engine that manages agent lifecycle, task distribution, and state coordination.' },
+                    { title: 'Key Features', content: '<ul><li>Agent registration and discovery</li><li>Task queue management</li><li>Event-driven architecture</li><li>Error handling and retries</li></ul>' },
+                    { title: 'Architecture', content: 'Built on FastAPI with async/await for high concurrency. Supports both stateless and stateful agents.' }
+                ]
+            },
+            subagents: {
+                title: 'Subagent Worker Pool',
+                sections: [
+                    { title: 'Description', content: 'Specialized worker agents that execute specific tasks in parallel for optimal performance.' },
+                    { title: 'Types', content: '<ul><li>Research agents - Information gathering</li><li>Code agents - Programming tasks</li><li>Analysis agents - Data processing</li><li>Creative agents - Content generation</li></ul>' },
+                    { title: 'Scaling', content: 'Dynamic scaling based on queue depth. Supports both local and distributed worker deployment.' }
+                ]
+            },
+            skills: {
+                title: 'Skills Engine',
+                sections: [
+                    { title: 'Description', content: 'Modular plugin system for extending OpenClaw capabilities without core modifications.' },
+                    { title: 'Skill Types', content: '<ul><li>Integration skills - External APIs</li><li>Tool skills - Utility functions</li><li>Data skills - Database operations</li><li>AI skills - Specialized models</li></ul>' },
+                    { title: 'Development', content: 'Skills are developed as Python packages with standardized interfaces and hot-reload capability.' }
+                ]
+            },
+            r2: {
+                title: 'R2 Object Storage',
+                sections: [
+                    { title: 'Description', content: 'Cloudflare R2 provides S3-compatible object storage with zero egress fees.' },
+                    { title: 'Use Cases', content: '<ul><li>User file uploads</li><li>Backup and archives</li><li>Model artifacts</li><li>Static asset hosting</li></ul>' },
+                    { title: 'Benefits', content: 'Zero egress bandwidth costs, global distribution, automatic redundancy, and S3 API compatibility.' }
+                ]
+            },
+            kv: {
+                title: 'KV Store',
+                sections: [
+                    { title: 'Description', content: 'Ultra-low-latency global key-value storage for frequently accessed data.' },
+                    { title: 'Use Cases', content: '<ul><li>Session state</li><li>Rate limiting counters</li><li>Feature flags</li><li>Configuration caching</li></ul>' },
+                    { title: 'Performance', content: 'Sub-50ms read latency globally. Eventually consistent with automatic replication.' }
+                ]
+            },
+            d1: {
+                title: 'D1 SQL Database',
+                sections: [
+                    { title: 'Description', content: 'Cloudflare D1 provides a serverless SQLite-based relational database.' },
+                    { title: 'Use Cases', content: '<ul><li>User profiles and metadata</li><li>Conversation history</li><li>Analytics and metrics</li><li>Relationship data</li></ul>' },
+                    { title: 'Features', content: 'SQLite compatibility, automatic backups, point-in-time recovery, and edge caching.' }
+                ]
+            },
+            aigateway: {
+                title: 'AI Gateway',
+                sections: [
+                    { title: 'Description', content: 'Unified interface to multiple AI providers with intelligent routing and fallback.' },
+                    { title: 'Supported Providers', content: '<ul><li>OpenAI (GPT-4, GPT-3.5)</li><li>Anthropic (Claude)</li><li>Google (Gemini)</li><li>Local models (Ollama)</li></ul>' },
+                    { title: 'Features', content: 'Cost optimization, automatic failover, request caching, token usage tracking, and rate limit management.' }
+                ]
+            },
+            browser: {
+                title: 'Browser Rendering Service',
+                sections: [
+                    { title: 'Description', content: 'Headless browser automation for web scraping, screenshots, and PDF generation.' },
+                    { title: 'Capabilities', content: '<ul><li>Web scraping and extraction</li><li>PDF generation from HTML</li><li>Screenshot capture</li><li>Form automation</li><li>JavaScript execution</li></ul>' },
+                    { title: 'Tech Stack', content: 'Playwright for modern web compatibility, with support for multiple browser engines (Chromium, Firefox, WebKit).' }
+                ]
+            }
+        };
+
+        // Initialize D3 Diagram
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        const svg = d3.select('#diagram')
+            .attr('width', width)
+            .attr('height', height);
+
+        // Grid Background
+        const gridSize = 50;
+        const gridGroup = svg.append('g').attr('class', 'grid-group');
+        
+        for (let x = 0; x < width; x += gridSize) {
+            gridGroup.append('line')
+                .attr('class', 'grid')
+                .attr('x1', x).attr('y1', 0)
+                .attr('x2', x).attr('y2', height);
+        }
+        for (let y = 0; y < height; y += gridSize) {
+            gridGroup.append('line')
+                .attr('class', 'grid')
+                .attr('x1', 0).attr('y1', y)
+                .attr('x2', width).attr('y2', y);
+        }
+
+        // Main Group for Zoom/Pan
+        const g = svg.append('g');
+
+        // Zoom Behavior
+        const zoom = d3.zoom()
+            .scaleExtent([0.5, 3])
+            .on('zoom', (event) => {
+                g.attr('transform', event.transform);
+            });
+
+        svg.call(zoom);
+
+        // Layer Labels
+        const layerLabels = [
+            { text: 'Client Layer', y: 60, color: '#00ffff' },
+            { text: 'Gateway Layer', y: 210, color: '#ff00ff' },
+            { text: 'Sandbox Layer', y: 360, color: '#00ff88' },
+            { text: 'Storage Layer', y: 510, color: '#ffa500' }
+        ];
+
+        layerLabels.forEach(label => {
+            g.append('text')
+                .attr('class', 'layer-label')
+                .attr('x', 50)
+                .attr('y', label.y)
+                .style('fill', label.color)
+                .text(label.text);
+        });
+
+        // Links
+        const linkGroup = g.append('g').attr('class', 'links');
+        
+        const links = linkGroup.selectAll('.link')
+            .data(architectureData.links)
+            .enter()
+            .append('path')
+            .attr('class', 'link')
+            .attr('id', (d, i) => `link-${i}`)
+            .attr('stroke', d => {
+                const colors = { request: '#00ffff', internal: '#ff00ff', storage: '#ffa500', ai: '#00ff88' };
+                return colors[d.type] || '#888';
+            })
+            .attr('d', d => {
+                const source = architectureData.nodes.find(n => n.id === d.source);
+                const target = architectureData.nodes.find(n => n.id === d.target);
+                return `M${source.x},${source.y} L${target.x},${target.y}`;
+            });
+
+        // Nodes
+        const nodeGroup = g.append('g').attr('class', 'nodes');
+
+        const nodes = nodeGroup.selectAll('.node')
+            .data(architectureData.nodes)
+            .enter()
+            .append('g')
+            .attr('class', d => `node glow-${d.layer === 'client' ? 'cyan' : d.layer === 'gateway' ? 'purple' : d.layer === 'sandbox' ? 'green' : d.layer === 'storage' ? 'orange' : 'red'}`)
+            .attr('data-layer', d => d.layer)
+            .attr('transform', d => `translate(${d.x}, ${d.y})`)
+            .on('click', (event, d) => showDetails(d))
+            .on('mouseenter', (event, d) => showTooltip(event, d))
+            .on('mouseleave', hideTooltip);
+
+        // Node Rectangles
+        nodes.append('rect')
+            .attr('x', -60)
+            .attr('y', -25)
+            .attr('width', 120)
+            .attr('height', 50)
+            .attr('rx', 10)
+            .attr('fill', 'rgba(20, 20, 35, 0.9)')
+            .attr('stroke', d => d.color);
+
+        // Node Icons
+        nodes.append('text')
+            .attr('class', 'node-icon')
+            .attr('x', -40)
+            .attr('y', 5)
+            .text(d => d.icon);
+
+        // Node Labels
+        nodes.append('text')
+            .attr('x', 5)
+            .attr('y', 4)
+            .text(d => d.label);
+
+        // Tooltip Functions
+        const tooltip = document.getElementById('tooltip');
+
+        function showTooltip(event, d) {
+            tooltip.innerHTML = `<h4>${d.label}</h4>${d.description}`;
+            tooltip.style.left = (event.pageX + 15) + 'px';
+            tooltip.style.top = (event.pageY + 15) + 'px';
+            tooltip.classList.add('visible');
+        }
+
+        function hideTooltip() {
+            tooltip.classList.remove('visible');
+        }
+
+        // Detail Panel Functions
+        function showDetails(node) {
+            const panel = document.getElementById('detailPanel');
+            const title = document.getElementById('detailTitle');
+            const content = document.getElementById('detailContent');
+            
+            const details = nodeDetails[node.id];
+            if (!details) return;
+
+            title.textContent = details.title;
+            content.innerHTML = details.sections.map(section => `
+                <div class="detail-section">
+                    <h4>${section.title}</h4>
+                    <p>${section.content}</p>
+                </div>
+            `).join('');
+
+            panel.classList.add('open');
+        }
+
+        function closeDetailPanel() {
+            document.getElementById('detailPanel').classList.remove('open');
+        }
+
+        // Layer Toggle
+        document.querySelectorAll('.layer-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function(e) {
+                if (e.target.tagName === 'INPUT') return;
+                const checkbox = this.querySelector('input');
+                checkbox.checked = !checkbox.checked;
+                toggleLayer(this.dataset.layer, checkbox.checked);
+            });
+
+            const checkbox = toggle.querySelector('input');
+            checkbox.addEventListener('change', function() {
+                toggleLayer(toggle.dataset.layer, this.checked);
+            });
+        });
+
+        function toggleLayer(layer, visible) {
+            d3.selectAll(`.node[data-layer="${layer}"]`)
+                .transition()
+                .duration(300)
+                .style('opacity', visible ? 1 : 0.1)
+                .style('pointer-events', visible ? 'all' : 'none');
+
+            // Also dim related links
+            d3.selectAll('.link')
+                .transition()
+                .duration(300)
+                .style('opacity', function(d) {
+                    const source = architectureData.nodes.find(n => n.id === d.source);
+                    const target = architectureData.nodes.find(n => n.id === d.target);
+                    const sourceVisible = d3.select(`.node[data-layer="${source.layer}"]`).style('opacity') !== '0.1';
+                    const targetVisible = d3.select(`.node[data-layer="${target.layer}"]`).style('opacity') !== '0.1';
+                    return (visible && sourceVisible && targetVisible) ? 0.6 : 0.05;
+                });
+        }
+
+        // Flow Animation
+        let animationRunning = false;
+        
+        document.getElementById('animateFlow').addEventListener('click', animateRequestFlow);
+
+        function animateRequestFlow() {
+            if (animationRunning) return;
+            animationRunning = true;
+
+            const status = document.getElementById('flowStatus');
+            status.textContent = 'Request Flow: Telegram → Worker → Moltbot → AI → Response';
+            status.classList.add('active');
+
+            const flow = [
+                { from: 'telegram', to: 'worker', delay: 0 },
+                { from: 'worker', to: 'moltbot', delay: 1000 },
+                { from: 'moltbot', to: 'aigateway', delay: 2000 },
+                { from: 'aigateway', to: 'moltbot', delay: 3500 },
+                { from: 'moltbot', to: 'kv', delay: 4500 },
+                { from: 'moltbot', to: 'worker', delay: 5500 },
+                { from: 'worker', to: 'telegram', delay: 6500 }
+            ];
+
+            flow.forEach((step, index) => {
+                setTimeout(() => {
+                    animatePacket(step.from, step.to, index === flow.length - 1);
+                }, step.delay);
+            });
+
+            setTimeout(() => {
+                animationRunning = false;
+                status.textContent = 'Flow complete. Ready for next animation.';
+                status.classList.remove('active');
+            }, 8000);
+        }
+
+        function animatePacket(fromId, toId, isLast) {
+            const from = architectureData.nodes.find(n => n.id === fromId);
+            const to = architectureData.nodes.find(n => n.id === toId);
+
+            const packet = g.append('circle')
+                .attr('class', 'packet')
+                .attr('r', 6)
+                .attr('cx', from.x)
+                .attr('cy', from.y);
+
+            packet.transition()
+                .duration(800)
+                .ease(d3.easeLinear)
+                .attr('cx', to.x)
+                .attr('cy', to.y)
+                .on('end', function() {
+                    d3.select(this).remove();
+                    if (isLast) {
+                        // Pulse effect on final node
+                        const targetNode = d3.selectAll('.node').filter(d => d.id === toId);
+                        targetNode.select('rect')
+                            .transition()
+                            .duration(200)
+                            .attr('stroke-width', 5)
+                            .transition()
+                            .duration(200)
+                            .attr('stroke-width', 2);
+                    }
+                });
+        }
+
+        // Reset View
+        document.getElementById('resetView').addEventListener('click', () => {
+            svg.transition()
+                .duration(750)
+                .call(zoom.transform, d3.zoomIdentity);
+        });
+
+        // Initial Animation
+        nodes.style('opacity', 0)
+            .transition()
+            .duration(500)
+            .delay((d, i) => i * 100)
+            .style('opacity', 1);
+
+        links.style('opacity', 0)
+            .transition()
+            .duration(500)
+            .delay(1000)
+            .style('opacity', 0.6);
+
+        // Window Resize
+        window.addEventListener('resize', () => {
+            const newWidth = window.innerWidth;
+            const newHeight = window.innerHeight;
+            svg.attr('width', newWidth).attr('height', newHeight);
+        });
+    </script>
+</body>
+</html>

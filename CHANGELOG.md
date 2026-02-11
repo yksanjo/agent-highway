@@ -5,41 +5,57 @@ All notable changes to Agent Highway will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2026-02-09
+## [1.0.1] - 2025-02-10
+
+### 🐛 Fixes & Improvements
+
+- **Honest README**: Updated with real test results and verified claims
+- **TESTING.md**: Added verification steps for users
+- **CI/CD**: GitHub Actions workflow for automated testing
+- **Real Data**: Sample collection results included in repo
+
+### 📊 Verified Discoveries
+
+Test run on 2025-02-10:
+- Scanned 20 GitHub repositories
+- Discovered 5 AI agents with confidence scores
+- Top discovery: MemMachine (4,481 stars, 0.63 confidence)
+
+---
+
+## [1.0.0] - 2025-02-09
 
 ### 🎉 Initial Release
 
-Agent Highway is now open source! The unified superhighway for AI agent discovery and monitoring.
+Agent Highway MVP - Functional prototype for AI agent discovery.
 
-### ✨ Features
+### ✅ Working Features
 
 #### Collectors
-- **GitHub Collector**: Discover AI agent repositories with multi-factor confidence scoring
-- **OpenClaw Scanner**: Find OpenClaw deployments across GitHub (42 repos discovered!)
-- **Discord Collector**: Framework for Discord bot discovery (WIP)
-- **Telegram Collector**: Framework for Telegram bot monitoring (WIP)
+- **GitHub Collector**: ✅ Production-ready with confidence scoring
+- **OpenClaw Scanner**: ✅ Basic implementation working
 
 #### Core Engine
-- **Unified Collector Runner**: Manage multiple data sources
-- **Stream Processing**: Real-time batch processing with configurable pipelines
-- **Agent Detection**: Multi-factor detection with confidence scoring
-- **Storage Layer**: JSON and SQLite backends
-
-#### Intelligence
-- **Network Analysis**: Build agent relationship graphs
-- **Trend Analysis**: Track ecosystem growth
-- **Swarm Detection**: Identify coordinated agent groups
+- **Collector Runner**: ✅ Unified runner for collectors
+- **Agent Detection**: ✅ Multi-factor confidence scoring (metadata, README, code)
+- **Storage**: ✅ JSON backend implemented
 
 #### Interface
-- **Terminal Dashboard**: Rich-based live dashboard
-- **CLI**: Unified command-line interface
-- **API**: FastAPI foundation (WIP)
+- **Terminal Dashboard**: ✅ Rich-based live dashboard
+- **CLI**: ✅ Basic command-line interface via `run.py`
 
-### 📊 Initial Discoveries
+### 🚧 Work In Progress
 
-- 42 OpenClaw-related repositories identified
-- Support for 5+ agent types (autonomous, chatbot, orchestrator, etc.)
-- Multi-platform support (GitHub, Discord, Telegram planned)
+- Discord/Telegram collectors (framework only)
+- Web dashboard (FastAPI planned)
+- ML-based detection models
+- SQLite storage backend
+
+### 📊 Initial Test Results
+
+- GitHub API integration working
+- Agent detection scoring functional
+- Terminal dashboard displays correctly
 
 ### 🔧 Technical
 

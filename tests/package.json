@@ -1,0 +1,22 @@
+{
+  "name": "agent-highway-tests",
+  "version": "1.0.0",
+  "description": "Test suite for Agent Highway and OpenClaw integration",
+  "type": "module",
+  "scripts": {
+    "test": "node --test test_*.js",
+    "test:watch": "node --test --watch test_*.js",
+    "test:coverage": "node --experimental-test-coverage --test test_*.js",
+    "test:beacon": "node --test test_beacon_extension.js",
+    "test:integration": "node --test test_integration.js"
+  },
+  "keywords": [
+    "tests",
+    "agent-highway",
+    "openclaw"
+  ],
+  "author": "yksanjo@gmail.com",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {}
+}
