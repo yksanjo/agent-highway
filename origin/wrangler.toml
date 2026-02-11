@@ -1,0 +1,24 @@
+name = "agent-highway-origin-v2"
+main = "src/index.ts"
+compatibility_date = "2025-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Durable Objects
+[[durable_objects.bindings]]
+name = "BEACON_COLLECTOR"
+class_name = "BeaconCollector"
+
+# Migrations for Durable Objects
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["BeaconCollector"]
+
+# Environment variables (set these with wrangler secret)
+[vars]
+ENVIRONMENT = "production"
+HEARTBEAT_TIMEOUT_MS = "60000"
+
+# Optional: Custom domain
+# routes = [
+#   { pattern = "highway.yksanjo.workers.dev", custom_domain = true }
+# ]
