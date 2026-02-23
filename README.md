@@ -1,5 +1,12 @@
 # agent-highway
 
+Production-grade project scaffold focused on reliability, maintainability, and fast onboarding.
+
+[![CI](https://img.shields.io/github/actions/workflow/status/yksanjo/agent-highway/ci.yml?branch=main&label=ci)](https://github.com/yksanjo/agent-highway/actions)
+![License](https://img.shields.io/github/license/yksanjo/agent-highway)
+![Last Commit](https://img.shields.io/github/last-commit/yksanjo/agent-highway)
+![Repo Size](https://img.shields.io/github/repo-size/yksanjo/agent-highway)
+
 ## Detailed Description
 
 agent-highway is maintained as an industry-grade software project with production-ready engineering practices.  
